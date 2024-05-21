@@ -1,12 +1,13 @@
 import telebot
 import time
-import schedule
+#import schedule
 from telebot import types
 from config import token
 from threading import Thread
+from examiner_database import *
 
-bot = telebot.TeleBot(token)
-
+bot = telebot.TeleBot("6937121660:AAFvEQaTyA74NRLw8NciWs4_2TSb31U3udQ")
+create_database()
 
 def create_inline_buttons(dictionary):
     keyboard = types.InlineKeyboardMarkup(row_width=2)
@@ -32,17 +33,19 @@ def start_dialog(message):
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def callback(call):
+def callback(call): #ask level and subject
     user_id = call.message.chat.id
     subject_list = ['rus', 'math', 'inf', 'demos']
 
     if call.data == 'oge' or call.data == 'ege':
         user_exam = call.message.text    # это текст нажатой кнопки
-        print(user_exam)
+        print("user_exam:", user_exam)
+        add_user(user_id)
+        update("level", user_exam, user_id)
         # сохрани user_exam в бд ...
         bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                              text="ты выбрал экзамен, чтобы его поменять воспользуйся командой /new_exam")
-        bot.send_message(chat_id=user_id, text='теперь выбери предмет: ',
+                              text="Ты выбрал экзамен, чтобы его поменять воспользуйся командой /new_exam")
+        bot.send_message(chat_id=user_id, text='Теперь выбери предмет: ',
                          reply_markup=create_inline_buttons(
                              dictionary={'Русский': 'rus',
                                          'Математика': 'math',
@@ -52,11 +55,11 @@ def callback(call):
     if call.data in subject_list:
         user_choice = call.message.text    # сохрани в бд предмет
         print(user_choice)
-        ...
+        update("subject", user_choice, user_id)
         bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                              text=f'ты выбрал предмет. '
+                              text=f'Ты выбрал предмет. '
                                    f'Его всегда можно будет поменять по команде /new_subject.'
-                                   f'теперь в 16:00 я буду отправлять'
+                                   f'Теперь в 16:00 я буду отправлять'
                                    f' тебе напоминание.')
 
 
