@@ -1,12 +1,12 @@
 import telebot
 import time
-#import schedule
+import schedule
 from telebot import types
 from config import token
 from threading import Thread
 from examiner_database import *
 
-bot = telebot.TeleBot("6937121660:AAFvEQaTyA74NRLw8NciWs4_2TSb31U3udQ")
+bot = telebot.TeleBot(token)
 create_database()
 
 def create_inline_buttons(dictionary):
@@ -33,7 +33,7 @@ def start_dialog(message):
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def callback(call): #ask level and subject
+def callback(call):
     user_id = call.message.chat.id
     subject_list = ['rus', 'math', 'inf', 'demos']
 
