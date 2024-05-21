@@ -2,11 +2,12 @@ import telebot
 import time
 import schedule
 from telebot import types
-from config import token
+from examiner_database import create_database, add_user, update, select_num_from_database, statistics
 from threading import Thread
+from creds import get_bot_token
 from examiner_database import *
 
-bot = telebot.TeleBot(token)
+bot = telebot.TeleBot(get_bot_token())
 create_database()
 
 def create_inline_buttons(dictionary):
