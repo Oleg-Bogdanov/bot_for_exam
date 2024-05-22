@@ -53,3 +53,14 @@ def statistics(our_user_id):    # функция для получения вс�
     result = cur.execute(query).fetchall()
     con.close()
     return result[0][0]
+
+
+def get_user_ids(): # функция для получения user_id всех пользователей
+    # Функция возвращает список кортежей. Типо этого: [(1439318759,), (6459863201,)]
+    con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
+    cur = con.cursor()
+    query = f'''SELECT DISTINCT user_id FROM users '''
+    result = cur.execute(query).fetchall()
+    con.close()
+    return result
+
