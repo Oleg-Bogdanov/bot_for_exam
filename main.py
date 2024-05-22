@@ -33,6 +33,20 @@ def start_dialog(message):
         bot.send_message(user_id, f'{e}')
 
 
+def send_task():
+    user_id = 1439318759    # Идентификатор пользователя, которому отправляем сообщение. Замени на свой
+    bot.send_message(user_id, 'Пора порешать задания',
+                     reply_markup=create_inline_buttons({'получить задание': 'get_task'}))
+
+def schedule_runner():    # Функция, которая запускает бесконечный цикл с расписанием
+    while True:    # Уже знакомый тебе цикл
+        schedule.run_pending()
+        time.sleep(1)
+
+
+schedule.every().day.at("15:00").do(send_task)    # say_hello будет выполняться каждый день в 15:00
+Thread(target=schedule_runner).start()
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback(call):
     user_id = call.message.chat.id
@@ -62,6 +76,10 @@ def callback(call):
                                    f'Его всегда можно будет поменять по команде /new_subject.'
                                    f'Теперь в 16:00 я буду отправлять'
                                    f' тебе напоминание.')
+
+    if call.data == 'get_task':
+        bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
+                              text='тут будет задание')
 
 
 bot.infinity_polling()
