@@ -62,7 +62,7 @@ def callback(call):
                               text="Ты выбрал экзамен, чтобы его поменять воспользуйся командой /new_exam")
         bot.send_message(chat_id=user_id, text='Теперь выбери предмет: ',
                          reply_markup=create_inline_buttons(
-                             dictionary={'Русский✒': 'rus',
+                             dictionary={'Русский': 'rus',
                                          'Математика': 'math',
                                          'Информатика': 'inf',
                                          'Обществознание': 'demos'}))
