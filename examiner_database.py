@@ -17,7 +17,7 @@ def add_user(our_user_id):
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
     sql_query = '''INSERT INTO users (user_id, level, subject, num_correct_answers, num_all_answers) VALUES(?, ?, ?, ?, ?);'''
-    values = (our_user_id, "NULL", "NULL", "NULL", "NULL")
+    values = (our_user_id, "NULL", "NULL", 0, 0)
     cur.execute(sql_query, values)
     con.commit()
     con.close()
@@ -55,7 +55,7 @@ def statistics(our_user_id):    # функция для получения вс�
     return result[0][0]
 
 
-def get_user_ids(): # функция для получения user_id всех пользователей
+def get_user_ids():    # функция для получения user_id всех пользователей
     # Функция возвращает список кортежей. Типо этого: [(1439318759,), (6459863201,)]
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
@@ -63,4 +63,3 @@ def get_user_ids(): # функция для получения user_id всех 
     result = cur.execute(query).fetchall()
     con.close()
     return result
-
