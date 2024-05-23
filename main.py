@@ -2,6 +2,7 @@ import telebot
 import time
 import logging
 import schedule
+from sdamgia import get_task
 from telebot import types
 from examiner_database import create_database, \
     add_user, update, select_num_from_database, statistics, get_user_ids
@@ -17,7 +18,7 @@ logging.basicConfig(filename=LOGS, level=logging.ERROR,
                     format="%(asctime)s FILE: %(filename)s IN: "
                            "%(funcName)s MESSAGE: %(message)s", filemode="w")
 
-def create_inline_buttons(dictionary):
+def create_inline_buttons(dictionary: dict):
     keyboard = types.InlineKeyboardMarkup(row_width=2)
 
     for key, value in dictionary.items():
@@ -58,8 +59,7 @@ def schedule_runner():    # Функция, которая запускает б
         time.sleep(1)
 
 
-# schedule.every(10).seconds.do(send_task)
-schedule.every().day.at("17:15").do(send_task)    # say_hello будет выполняться каждый день в 15:00
+schedule.every().day.at("16:00").do(send_task)    # say_hello будет выполняться каждый день в 15:00
 Thread(target=schedule_runner).start()
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -89,14 +89,17 @@ def callback(call):
                                   text=f'Ты выбрал предмет. '
                                        f'Его всегда можно будет поменять по команде /new_subject.'
                                        f'Теперь в 16:00 я буду отправлять'
-                                       f' тебе напоминание.')
+                                       f' тебе напоминание.',
+                                  reply_markup=create_inline_buttons({'кнопка': "get_task"}))
 
         if call.data == 'get_task':
+            statistics(user_id)
+            task = get_task('inf', 'oge', 10875)    # потом придумаем автоматизацию
             bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                                  text='тут будет задание')
+                                  text=task)
     except Exception as e:
         logging.error(e)
         bot.send_message(user_id, 'произошла непредвиденная ошибка')
 
 
-bot.infinity_polling()
+bot.infinity_polling(timeout=45)

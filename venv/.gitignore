@@ -1,3 +1,4 @@
 # created by virtualenv automatically
-creds/bot_token.txt
+creds/
 venv/
+*.txt
