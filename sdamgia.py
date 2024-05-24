@@ -2,8 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import logging
 from config import LOGS
-#import pandas
-#from PIL import Image
+import pandas
+from PIL import Image
 
 
 logging.basicConfig(filename=LOGS, level=logging.ERROR,
