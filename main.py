@@ -4,12 +4,12 @@ import logging
 import schedule
 from sdamgia import get_task
 from telebot import types
-from examiner_database import create_database, \
-    add_user, update, select_num_from_database, statistics, get_user_ids
 from threading import Thread
 from config import LOGS
 from creds import get_bot_token
 from examiner_database import *
+import requests
+import pyvips    #библиотека для изменения расширения изображения
 
 bot = telebot.TeleBot(get_bot_token())
 create_database()
@@ -49,7 +49,7 @@ def start_dialog(message):
 def send_task():
     id_list = get_user_ids()    # Идентификатор пользователя, которому отправляем сообщение. Замени на свой
     for user_id in id_list:
-        user_id = int(user_id)
+        user_id = int(user_id[0])  # нужен индекс так как функция get_user_ids возвращает список кортежей
         bot.send_message(user_id, 'Пора порешать задания',
                          reply_markup=create_inline_buttons({'получить задание': 'get_task'}))
 
@@ -61,6 +61,15 @@ def schedule_runner():    # Функция, которая запускает б
 
 schedule.every().day.at("16:00").do(send_task)    # say_hello будет выполняться каждый день в 15:00
 Thread(target=schedule_runner).start()
+
+def send_images(links, user_id):
+    for i in range(len(links)):
+        response = requests.get(url=links[i])
+        with open(f"{i}.svg", "wb") as file:
+            file.write(response.content)
+        image = pyvips.Image.new_from_file(f"{i}.svg", dpi=300)
+        image.write_to_file(f"{i}.png")
+        bot.send_photo(user_id, open(f"{i}.png", 'rb'))
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback(call):
@@ -90,6 +99,7 @@ def callback(call):
                               reply_markup=create_inline_buttons({'Готовиться к ОГЭ': 'oge',
                                                                   'Готовиться к ЕГЭ': 'ege'}))
 
+<<<<<<< HEAD
     elif call.data in subject_list:
         user_choice = call.data    # сохрани в бд предмет
         print(user_choice)
@@ -121,6 +131,17 @@ def callback(call):
     # except Exception as e:
     #     logging.error(e)
     #     bot.send_message(user_id, 'произошла непредвиденная ошибка')
+=======
+        if call.data == 'get_task':
+            statistics(user_id)
+            task, links = get_task('inf', 'oge', 10875)    # потом придумаем автоматизацию
+            bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
+                                  text=task)
+            send_images(links,user_id)
+    except Exception as e:
+        logging.error(e)
+        bot.send_message(user_id, 'произошла непредвиденная ошибка')
+>>>>>>> 123b74b0e72075041b481dea9a0c788b000b4257
 
 
 bot.infinity_polling(timeout=45)
