@@ -66,40 +66,61 @@ Thread(target=schedule_runner).start()
 def callback(call):
     user_id = call.message.chat.id
     subject_list = ['rus', 'math', 'inf', 'demos']
-    try:
+    # try:
+    if call.data == 'oge' or call.data == 'ege' or call.data == 'back_to_sub':
+        user_exam = call.data   # это текст нажатой кнопки
+        print("user_exam:", call.data)
         if call.data == 'oge' or call.data == 'ege':
-            user_exam = call.data   # это текст нажатой кнопки
-            print("user_exam:", call.data)
             update("level", user_exam, user_id)
-            # сохрани user_exam в бд ...
-            bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                                  text="Ты выбрал экзамен, чтобы его поменять воспользуйся командой /new_exam")
-            bot.send_message(chat_id=user_id, text='Теперь выбери предмет: ',
-                             reply_markup=create_inline_buttons(
-                                 dictionary={'Русский': 'rus',
-                                             'Математика': 'math',
-                                             'Информатика': 'inf',
-                                             'Обществознание': 'demos'}))
+        else:
+            pass
+        # сохрани user_exam в бд ...
+        bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
+                              text="Ты выбрал экзамен.")
+        bot.send_message(chat_id=user_id, text='Теперь выбери предмет: ',
+                         reply_markup=create_inline_buttons(
+                             dictionary={'Русский': 'rus',
+                                         'Математика': 'math',
+                                         'Информатика': 'inf',
+                                         'Обществознание': 'demos',
+                                         '⬅ вернуться к экзамену': 'back_to_exam'}))
 
-        if call.data in subject_list:
-            user_choice = call.data    # сохрани в бд предмет
-            print(user_choice)
-            update("subject", user_choice, user_id)
-            bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                                  text=f'Ты выбрал предмет. '
-                                       f'Его всегда можно будет поменять по команде /new_subject.'
-                                       f'Теперь в 16:00 я буду отправлять'
-                                       f' тебе напоминание.',
-                                  reply_markup=create_inline_buttons({'кнопка': "get_task"}))
+    elif call.data == 'back_to_exam':
+        bot.edit_message_text(chat_id=user_id, message_id=call.message.id, text='выбери экзамен',
+                              reply_markup=create_inline_buttons({'Готовиться к ОГЭ': 'oge',
+                                                                  'Готовиться к ЕГЭ': 'ege'}))
 
-        if call.data == 'get_task':
-            statistics(user_id)
-            task = get_task('inf', 'oge', 10875)    # потом придумаем автоматизацию
-            bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-                                  text=task)
-    except Exception as e:
-        logging.error(e)
-        bot.send_message(user_id, 'произошла непредвиденная ошибка')
+    elif call.data in subject_list:
+        user_choice = call.data    # сохрани в бд предмет
+        print(user_choice)
+        update("subject", user_choice, user_id)
+        bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
+                              text=f'Ты выбрал предмет. '
+                                   f'Его всегда можно будет поменять '
+                                   f'прямо сейчас или по команде /start '
+                                   f'Теперь в 16:00 я буду отправлять'
+                                   f' тебе напоминание.',
+                              reply_markup=create_inline_buttons({'начать решать задания': "get_task",
+                                                                  '⬅ к выбору предмета': "back_to_sub"}))
+
+    elif call.data == 'get_task':
+        statistics(user_id)
+        task = get_task('inf', 'oge', 10875)    # потом придумаем автоматизацию
+        bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
+                              text=task)
+
+    elif call.data == 'back_to_sub':
+        bot.edit_message_text(user_id, message_id=call.message.id,
+                              reply_markup=create_inline_buttons(
+                              dictionary={'Русский': 'rus',
+                                          'Математика': 'math',
+                                          'Информатика': 'inf',
+                                          'Обществознание': 'demos',
+                                          '⬅ вернуться к экзамену': 'back_to_exam'}))
+
+    # except Exception as e:
+    #     logging.error(e)
+    #     bot.send_message(user_id, 'произошла непредвиденная ошибка')
 
 
 bot.infinity_polling(timeout=45)

@@ -32,7 +32,7 @@ def get_task(subject: str, exam: str, task_id: int):
     return task, sol
 
 
-get_task('math', 'oge', 311530)
+# get_task('math', 'oge', 311530)
 
 def get_table(subject: str, exam: str, table_id: int):
     url = f'https://{subject}-{exam}.sdamgia.ru/problem?id={table_id}'
