@@ -63,7 +63,11 @@ def get_solution(subject: str, exam: str, task_id: int): #не редактир�
     return sol_element
 
 
+<<<<<<< HEAD
+# get_task('math', 'oge', 311530)
+=======
 get_solution('math', 'ege', 27238)
+>>>>>>> 123b74b0e72075041b481dea9a0c788b000b4257
 
 def get_table(subject: str, exam: str, table_id: int):
     url = f'https://{subject}-{exam}.sdamgia.ru/problem?id={table_id}'
