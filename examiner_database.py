@@ -34,25 +34,22 @@ def update(column, data, our_user_id, ):
     con.commit()
     con.close()
 
-def select_num_from_database(column, our_user_id): # функция для получения количества решенных и правильно решенных задач
+def select_user_info(column, our_user_id):
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
-    query1 = f'''SELECT level, subject FROM users WHERE user_id = {our_user_id} ORDER BY id DESC LIMIT 1'''
-    result = cur.execute(query1).fetchall()
-    level, subject = result[0][0]
-    query2=f'''SELECT {column}  FROM users WHERE user_id = {our_user_id} AND level = {level} AND subject = {subject}'''
-    result=cur.execute(query2).fetchall()
+    result = cur.execute(f'''SELECT Max(id) FROM users WHERE user_id = ?''',(our_user_id,)).fetchall()
+    max_id = result[0][0]
+    result=cur.execute(f'''SELECT {column}  FROM users WHERE user_id = ? AND id = ?''',(our_user_id, max_id)).fetchall()
     con.close()
     return result[0][0]
 
-def statistics(our_user_id):    # функция для получения всех строк БД, связанных с конкретным пользователем
-    # функция возвращает  [(2, 6459863201, 'oge', 'inf', 0, 0), (3, 6459863201, 'ege', 'inf', 0, 0)]
+def statistics(our_user_id, exam, subject): #возвращает количество правильно решенных и всего решенных заданий по конкретному экзамену и предмету
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
-    query = f'''SELECT * FROM users WHERE user_id = {our_user_id}'''
-    result = cur.execute(query).fetchall()
+    num_correct_answers = cur.execute('''SELECT SUM(num_correct_answers)  FROM users WHERE user_id = ? AND level = ? AND subject = ?''', (our_user_id, exam, subject)).fetchall()
+    num_all_answers = cur.execute('''SELECT SUM(num_all_answers)  FROM users WHERE user_id = ? AND level = ? AND subject = ?''', (our_user_id, exam, subject)).fetchall()
     con.close()
-    return result
+    return num_correct_answers[0][0], num_all_answers[0][0]
 
 
 def get_user_ids():    # функция для получения user_id всех пользователей
@@ -63,4 +60,18 @@ def get_user_ids():    # функция для получения user_id все
     result = cur.execute(query).fetchall()
     con.close()
     return result
+
+def get_tasks_id(exam, subject):  #функция для получения id всех заданий, возвращает кортежи
+    con = sqlite3.connect(f"bank_bot_{exam}.sqlite", check_same_thread=False)
+    cur = con.cursor()
+    result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
+    con.close()
+    return result
+
+def get_task_solution(id, column, exam): #функция для получения задания или решения или ответа по id
+    con = sqlite3.connect(f"bank_bot_{exam}.sqlite", check_same_thread=False)
+    cur = con.cursor()
+    result = cur.execute(f'''SELECT {column} FROM bank WHERE id = ?''', (id,)).fetchall()
+    con.close()
+    return result[0][0]
 
