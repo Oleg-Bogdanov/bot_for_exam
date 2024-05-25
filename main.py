@@ -32,10 +32,10 @@ def create_inline_buttons(dictionary: dict):
 def start_dialog(message):
     user_id = message.from_user.id
     try:
-        current_users = get_user_ids()
-        users_list = [item[0] for item in current_users]
-        if user_id not in users_list:
-            add_user(our_user_id=user_id)
+        #current_users = get_user_ids()                       # функцию add_user лучше добавить туда же, где происходит
+        #users_list = [item[0] for item in current_users]     # выбор экзамена и проверять на наличие пользователя не нужно
+        #if user_id not in users_list:
+            #add_user(our_user_id=user_id)
         bot.send_message(user_id, 'Привет, это бот для подготовки к ОГЭ и ЕГЭ. '
                                   'Выбери, к чему ты готовишься, нажав на кнопки',
                                   reply_markup=create_inline_buttons({'Готовиться к ОГЭ': 'oge',
@@ -79,8 +79,9 @@ def callback(call):
         if call.data == 'oge' or call.data == 'ege':
             user_exam = call.data   # это текст нажатой кнопки
             print("user_exam:", call.data)
-            update("level", user_exam, user_id)
-            # сохрани user_exam в бд ...
+            add_user(user_id)                             # я хочу хранить информацию о всех предметах пользователя,
+            update("level", user_exam, user_id)    # поэтому в базе будет несколько строк с одним id, но разными предметами
+            # сохрани user_exam в бд ...                  # и экзаменами
             bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
                                   text="Ты выбрал экзамен, чтобы его поменять воспользуйся командой /new_exam")
             bot.send_message(chat_id=user_id, text='Теперь выбери предмет: ',

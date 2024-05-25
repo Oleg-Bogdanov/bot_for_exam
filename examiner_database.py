@@ -45,14 +45,14 @@ def select_num_from_database(column, our_user_id): # функция для по�
     con.close()
     return result[0][0]
 
-def statistics(our_user_id):    # функция для получения всех строк БД, связанных с конкретным пользователем.
-    # Её буду дорабатывать потом.
+def statistics(our_user_id):    # функция для получения всех строк БД, связанных с конкретным пользователем
+    # функция возвращает  [(2, 6459863201, 'oge', 'inf', 0, 0), (3, 6459863201, 'ege', 'inf', 0, 0)]
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
     query = f'''SELECT * FROM users WHERE user_id = {our_user_id}'''
     result = cur.execute(query).fetchall()
     con.close()
-    return result[0][0]
+    return result
 
 
 def get_user_ids():    # функция для получения user_id всех пользователей
@@ -63,3 +63,4 @@ def get_user_ids():    # функция для получения user_id все
     result = cur.execute(query).fetchall()
     con.close()
     return result
+
