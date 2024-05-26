@@ -28,7 +28,6 @@ def update(column, data, our_user_id, ):
     query1=f'''SELECT Max(id) FROM users WHERE user_id = {our_user_id} ;'''
     result = cur.execute(query1).fetchall()
     max_id=result[0][0]
-    print(max_id)
     query2 = f'''UPDATE users SET {column} = "{data}" WHERE user_id = {our_user_id} AND id = {max_id}'''
     cur.execute(query2)
     con.commit()
@@ -37,10 +36,11 @@ def update(column, data, our_user_id, ):
 def select_user_info(column, our_user_id):
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
-    result = cur.execute(f'''SELECT Max(id) FROM users WHERE user_id = ?''',(our_user_id,)).fetchall()
-    max_id = result[0][0]
-    result=cur.execute(f'''SELECT {column}  FROM users WHERE user_id = ? AND id = ?''',(our_user_id, max_id)).fetchall()
+    result = cur.execute(f'''SELECT Max(id) FROM users WHERE user_id = ?''', (our_user_id,)).fetchall()
+    max_id = result[0][0] #
+    result=cur.execute(f'''SELECT {column}  FROM users WHERE user_id = ? AND id = ?''', (our_user_id, max_id)).fetchall()
     con.close()
+    print('result: ', result)
     return result[0][0]
 
 def statistics(our_user_id, exam, subject): #возвращает количество правильно решенных и всего решенных заданий по конкретному экзамену и предмету
@@ -61,17 +61,26 @@ def get_user_ids():    # функция для получения user_id все
     con.close()
     return result
 
-def get_tasks_id(exam, subject):  #функция для получения id всех заданий, возвращает кортежи
-    con = sqlite3.connect(f"bank_bot_{exam}.sqlite", check_same_thread=False)
-    cur = con.cursor()
-    result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
-    con.close()
-    return result
+def get_tasks_id(exam, subject):  # функция для получения id всех заданий, возвращает кортежи
+    if exam == 'oge':
+        con = sqlite3.connect(f"bank_bot_oge.sqlite", check_same_thread=False)
+        cur = con.cursor()
+        result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
+        con.close()
+        return result
+    elif exam == 'ege':
+        con = sqlite3.connect(f"bank_bot_ege.sqlite", check_same_thread=False)
+        cur = con.cursor()
+        result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
+        con.close()
+        return result
 
 def get_task_solution(id, column, exam): #функция для получения задания или решения или ответа по id
-    con = sqlite3.connect(f"bank_bot_{exam}.sqlite", check_same_thread=False)
+    if exam == 'oge':
+        con = sqlite3.connect(f"bank_bot_oge.sqlite", check_same_thread=False)    # выдавало ошибку, так что изменил
+    else:
+        con = sqlite3.connect(f"bank_bot_ege.sqlite", check_same_thread=False)
     cur = con.cursor()
     result = cur.execute(f'''SELECT {column} FROM bank WHERE id = ?''', (id,)).fetchall()
     con.close()
     return result[0][0]
-
