@@ -80,7 +80,7 @@ def send_exercise(message):
     subject = str(select_user_info('subject', user_id))
     exercises = get_tasks_id(exam=user_exam, subject=subject)
     print(exercises)
-    exer = random.choice(list(exercises))
+    exer = random.choice(exercises)
     exer = str(exer)
     print(exercises, exer)
     task = get_task_solution(exer, 'task', user_exam)
