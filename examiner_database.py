@@ -36,11 +36,11 @@ def update(column, data, our_user_id, ):
 def select_user_info(column, our_user_id):
     con = sqlite3.connect("examiner_db.sqlite", check_same_thread=False)
     cur = con.cursor()
-    result = cur.execute(f'''SELECT Max(id) FROM users WHERE user_id = ?''', (our_user_id,)).fetchall()
-    max_id = result[0][0] #
+    result = cur.execute(f'''SELECT Max(id) FROM users WHERE user_id = ? ''', (our_user_id,)).fetchall()
+    max_id = result[0][0]
+    print(max_id)
     result=cur.execute(f'''SELECT {column}  FROM users WHERE user_id = ? AND id = ?''', (our_user_id, max_id)).fetchall()
     con.close()
-    print('result: ', result)
     return result[0][0]
 
 def statistics(our_user_id, exam, subject): #возвращает количество правильно решенных и всего решенных заданий по конкретному экзамену и предмету
@@ -67,20 +67,23 @@ def get_tasks_id(exam, subject):  # функция для получения id 
         cur = con.cursor()
         result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
         con.close()
-        return result
     elif exam == 'ege':
         con = sqlite3.connect(f"bank_bot_ege.sqlite", check_same_thread=False)
         cur = con.cursor()
         result = cur.execute(f'''SELECT id FROM bank WHERE subject = ?''', (subject,)).fetchall()
         con.close()
-        return result
+    return result
 
 def get_task_solution(id, column, exam): #функция для получения задания или решения или ответа по id
     if exam == 'oge':
-        con = sqlite3.connect(f"bank_bot_oge.sqlite", check_same_thread=False)    # выдавало ошибку, так что изменил
-    else:
+        con = sqlite3.connect(f"bank_bot_oge.sqlite", check_same_thread=False)
+        cur = con.cursor()
+        result = cur.execute(f'''SELECT {column} FROM bank WHERE id = ?''', (id,)).fetchall()
+        con.close()# выдавало ошибку, так что изменил
+    elif exam == 'ege':
         con = sqlite3.connect(f"bank_bot_ege.sqlite", check_same_thread=False)
-    cur = con.cursor()
-    result = cur.execute(f'''SELECT {column} FROM bank WHERE id = ?''', (id,)).fetchall()
-    con.close()
+        cur = con.cursor()
+        result = cur.execute(f'''SELECT {column} FROM bank WHERE id = ?''', (id,)).fetchall()
+        con.close()
     return result[0][0]
+

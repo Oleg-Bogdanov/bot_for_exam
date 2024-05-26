@@ -10,7 +10,7 @@ from creds import get_bot_token
 from examiner_database import *
 import requests
 import random
-# import pyvips    # библиотека для изменения расширения изображения
+
 
 bot = telebot.TeleBot(get_bot_token())
 create_database()
@@ -33,10 +33,6 @@ def create_inline_buttons(dictionary: dict):
 def start_dialog(message):
     user_id = message.from_user.id
     try:
-        #current_users = get_user_ids()                       # функцию add_user лучше добавить туда же, где происходит
-        #users_list = [item[0] for item in current_users]     # выбор экзамена и проверять на наличие пользователя не нужно
-        #if user_id not in users_list:
-            #add_user(our_user_id=user_id)
         bot.send_message(user_id, 'Привет, это бот для подготовки к ОГЭ и ЕГЭ. '
                                   'Выбери, к чему ты готовишься, нажав на кнопки',
                                   reply_markup=create_inline_buttons({'Готовиться к ОГЭ': 'oge',
@@ -60,36 +56,60 @@ def schedule_runner():    # Функция, которая запускает б
         time.sleep(1)
 
 
-schedule.every().day.at("16:00").do(send_task)    # say_hello будет выполняться каждый день в 15:00
+schedule.every().day.at("12:00").do(send_task)    # say_hello будет выполняться каждый день в 15:00
 Thread(target=schedule_runner).start()
-
-# def send_images(links, user_id):
-#     for i in range(len(links)):
-#         response = requests.get(url=links[i])
-#         with open(f"{i}.svg", "wb") as file:
-#             file.write(response.content)
-#         image = pyvips.Image.new_from_file(f"{i}.svg", dpi=300)
-#         image.write_to_file(f"{i}.png")
-#         bot.send_photo(user_id, open(f"{i}.png", 'rb'))
 
 
 @bot.message_handler(commands=['get_exercise'])
 def send_exercise(message):
-    user_id = message.from_user.id
-    user_exam = str(select_user_info('level', user_id))
-    subject = str(select_user_info('subject', user_id))
-    exercises = get_tasks_id(exam=user_exam, subject=subject)
-    print(exercises)
+    user_id = message.chat.id
+    print(user_id)
+    user_exam = select_user_info('level', user_id)
+    print(user_exam)
+    subject = select_user_info('subject', user_id)
+    print(subject)
+    exercises = get_tasks_id(user_exam, subject)
     exer = random.choice(exercises)
-    exer = str(exer)
-    print(exercises, exer)
+    exer = int(exer[0])
     task = get_task_solution(exer, 'task', user_exam)
-    answ = get_task_solution(exer, 'answer', user_exam)
-    print(task, answ)
+    if task != "NULL":
+        bot.send_message(message.chat.id, task)
+    task_img = get_task_solution(exer, 'task_img', user_exam)
+    if task_img != "NULL":
+        bot.send_photo(message.chat.id, photo=open(f'images/{task_img}', 'rb'))
+    bot.register_next_step_handler(message, check_answer, exer, user_exam, user_id)
+
+def check_answer(message, exer, user_exam, user_id):
+    user_answer = message.text
+    right_answer = get_task_solution(exer, 'answer', user_exam)
+    cor=select_user_info("num_correct_answers",user_id)
+    all=select_user_info("num_all_answers",user_id)
+    if user_answer == right_answer:
+        bot.send_message(message.chat.id, "Всё верно!")
+        a=cor+1
+        b=all+1
+        update("num_correct_answers", a, user_id)
+        update("num_all_answers", b, user_id)
+    else:
+        bot.send_message(message.chat.id, "Ответ неверен")
+        a = cor + 0
+        b = all + 1
+        update("num_correct_answers", a, user_id)
+        update("num_all_answers", b, user_id)
+    solution = get_task_solution(exer, 'solution', user_exam)
+    if solution != "NULL":
+        bot.send_message(message.chat.id, solution)
+    solution_image = get_task_solution(exer, 'solution_image', user_exam)
+    if solution_image != "NULL":
+        bot.send_photo(message.chat.id, photo=open(f'images/{solution_image}', 'rb'))
+    bot.send_message(message.chat.id, "Чтобы получить следующее задание, используйте команду /get_exercise")
+
+
+
+
 @bot.message_handler(commands=['update_exam'])
 def update_exam(message):
-    user_id = message.from_user.id
-    bot.send_message(user_id, 'выбери экзамен:',
+    bot.send_message(message.chat.id, 'выбери экзамен:',
                      reply_markup=create_inline_buttons(dictionary=
                                                         {'Готовиться к ОГЭ': 'oge',
                                                          'Готовиться к ЕГЭ': 'ege'}))
@@ -99,10 +119,9 @@ def update_exam(message):
 def callback(call):
     user_id = call.message.chat.id
     subject_list = ['rus', 'math', 'his']
-    # try:
+    #try:
     if call.data == 'oge' or call.data == 'ege':
         user_exam = call.data   # это текст нажатой кнопки
-        print("user_exam:", call.data)
         add_user(user_id)                             # я хочу хранить информацию о всех предметах пользователя,
         update("level", user_exam, user_id)    # поэтому в базе будет несколько строк с одним id, но разными предметами
         # сохрани user_exam в бд ...                  # и экзаменами
@@ -116,27 +135,33 @@ def callback(call):
 
     if call.data in subject_list:
         user_choice = call.data    # сохрани в бд предмет
-        print(user_choice)
         update("subject", user_choice, user_id)
         bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
                               text=f'Ты выбрал предмет. '
                                    f'Его всегда можно будет поменять по команде /update_exam.'
-                                   f'Теперь в 16:00 я буду отправлять'
+                                   f'Теперь в 12:00 я буду отправлять'
                                    f' тебе напоминание.',
                               reply_markup=create_inline_buttons({'Получить задание': "get_task"}))
 
     if call.data == 'get_task':
         send_exercise(call.message)
-        # statistics(user_id)
-        # task, links = get_task('inf', 'oge', 10875)    # потом придумаем автоматизацию
-        # bot.edit_message_text(chat_id=user_id, message_id=call.message.id,
-        #                       text=task)
-        # send_images(links, user_id)
-    if call.data == 'stats':
-        bot.send_message(user_id, 'статистика')
     # except Exception as e:
     #     logging.error(e)
     #     bot.send_message(user_id, 'произошла непредвиденная ошибка')
+
+@bot.message_handler(commands=['statistics'])
+def send_statistics(message):
+    user_id = message.chat.id
+    print(user_id)
+    user_exam = select_user_info('level', user_id)
+    print(user_exam)
+    subject = select_user_info('subject', user_id)
+    cor, all= statistics(user_id, user_exam, subject)
+    bot.send_message(user_id, f"Экзамен: {user_exam}\n"
+                                   f"Предмет: {subject}\n"
+                                   f"Правильно решено: {cor}\n"
+                                   f"Всего решено: {all}\n")
+
 
 
 bot.infinity_polling(timeout=45)
